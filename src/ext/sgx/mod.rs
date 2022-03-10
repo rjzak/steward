@@ -335,11 +335,14 @@ impl Quote {
         counter += 64;
 
         let quote_qe_auth_data_len = slice_to_u16(&data[counter..counter+2]);
+        counter += 2;
         let mut quote_qu_auth_data:Vec<u8> = Vec::new();
         for val in data[counter..counter+quote_qe_auth_data_len as usize].iter() {
             quote_qu_auth_data.push(*val);
         }
         counter += quote_qe_auth_data_len as usize;
+
+        println!("About to read QECertification short at offset 0x{:x}", counter);
 
         let quote_qe_certification_type = match slice_to_u16(&data[counter..counter+2]) {
             1 => QECertificationType::PCKidPPIDPlainCPUSVNPCESVN,
@@ -359,7 +362,8 @@ impl Quote {
         for val in data[counter..counter+quote_certification_data_len as usize].iter() {
             quote_certification_data.push(*val);
         }
-        //counter += quote_certification_data_len as usize;
+        counter += quote_certification_data_len as usize;
+        println!("Counter at the end: 0x{:x}", counter);
 
         let quote = Quote{
             header: QuoteHeader {
