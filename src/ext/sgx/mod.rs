@@ -175,7 +175,7 @@ impl Sgx {
 }
 
 impl Quote {
-    fn from_bytes(data: &[u8]) -> Result<Quote> {
+    pub fn from_bytes(data: &[u8]) -> Result<Quote> {
         // Keep our place in the data array
         let mut counter:usize = 0;
 
@@ -185,7 +185,7 @@ impl Quote {
         let quote_header_key_type = match slice_to_u16(&data[counter..counter+2]) {
             2 => AttestationKeyType::ECDSA256P256,
             3 => AttestationKeyType::ECDSA384P384,
-            _ => return Err(anyhow!("invalid quote attestation key type"))
+            x => return Err(anyhow!("invalid quote attestation key type, got {}", x))
         };
         counter += 2;
 
@@ -348,7 +348,7 @@ impl Quote {
             4 => QECertificationType::PCKLeafCert,
             5 => QECertificationType::ConcatenatedPCKCertChain,
             7 => QECertificationType::PlatformManifest,
-            _ => return Err(anyhow!("invalid quote certification type"))
+            x => return Err(anyhow!("invalid quote certification type, got {}", x))
         };
         counter += 2;
 

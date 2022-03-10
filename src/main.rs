@@ -254,7 +254,8 @@ mod tests {
 
         use http::{header::CONTENT_TYPE, Request};
         use hyper::Body;
-        use tower::ServiceExt; // for `app.oneshot()`
+        use tower::ServiceExt;
+        use crate::ext::sgx; // for `app.oneshot()`
 
         const CRT: &[u8] = include_bytes!("../certs/test/crt.der");
         const KEY: &[u8] = include_bytes!("../certs/test/key.der");
@@ -358,6 +359,15 @@ mod tests {
             let sub = Certificate::from_der(&body).unwrap();
             let iss = Certificate::from_der(CRT).unwrap();
             iss.tbs_certificate.verify_crt(&sub).unwrap();
+        }
+
+        #[test]
+        fn sgx_struct() {
+            use crate::ext::sgx;
+            let quote_bytes = include_bytes!("ext/sgx/sgx.quote");
+            let quote_struct = sgx::Quote::from_bytes(quote_bytes).unwrap();
+            println!("SGX quote: {:?}", quote_struct);
+            assert!(false);
         }
 
         #[tokio::test]
