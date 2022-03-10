@@ -2,11 +2,13 @@ use crate::crypto::*;
 
 use std::fmt::Debug;
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 
+use const_oid::db::rfc5912::ECDSA_WITH_SHA_256;
 use const_oid::ObjectIdentifier;
 use der::asn1::UIntBytes;
 use der::{Decodable, Encodable, Sequence};
+use pkcs8::AlgorithmIdentifier;
 use x509::ext::Extension;
 use x509::{request::CertReqInfo, Certificate};
 use x509::{PkiPath, TbsCertificate};
@@ -182,6 +184,20 @@ pub struct Quote {
     /// Size of the quote signature data structure
     pub quote_signature_len: u32,
     pub quote_signature_data: ECDSA256QuoteData,
+}
+
+impl Quote {
+    pub fn verify(&self, cert: &TbsCertificate) -> Result<bool> {
+        cert.verify_raw(
+            self.header.as_ref(),
+            AlgorithmIdentifier {
+                oid: ECDSA_WITH_SHA_256,
+                parameters: None,
+            },
+            &self.quote_signature_data.qe_report_signature_to_der().unwrap(),
+        ).context("sgx header validation failed");
+        Ok(true)
+    }
 }
 
 #[derive(Copy, Clone, Debug, Default)]
