@@ -5,7 +5,8 @@ use std::fmt::Debug;
 use anyhow::{anyhow, Result};
 
 use const_oid::ObjectIdentifier;
-use der::{Decodable, Sequence};
+use der::asn1::UIntBytes;
+use der::{Decodable, Encodable, Sequence};
 use x509::ext::Extension;
 use x509::{request::CertReqInfo, Certificate};
 use x509::{PkiPath, TbsCertificate};
@@ -23,7 +24,7 @@ pub struct Evidence<'a> {
 }
 
 #[repr(u16)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum AttestationKeyType {
     ECDSA256P256 = 2,
     ECDSA384P384 = 3,
@@ -65,6 +66,12 @@ pub struct QuoteHeader {
     pub user_data: [u8; 20]
 }
 
+impl AsRef<[u8; 48]> for QuoteHeader {
+    fn as_ref(&self) -> &[u8; 48] {
+        unsafe { std::mem::transmute::<_, &[u8; 48]>(self) }
+    }
+}
+
 #[repr(C, packed)]
 #[derive(Copy, Clone, Debug)]
 pub struct ISVEnclaveReport {
@@ -94,6 +101,12 @@ pub struct ISVEnclaveReport {
     pub report_data: [u8; 64]
 }
 
+impl AsRef<[u8; 384]> for ISVEnclaveReport {
+    fn as_ref(&self) -> &[u8; 384] {
+        unsafe { std::mem::transmute::<_, &[u8; 384]>(self) }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct QECertificationData {
     pub certification_data_type: QECertificationType,
@@ -120,6 +133,44 @@ pub struct ECDSA256QuoteData {
     pub qe_authentication_data: QEAuthenticationData,
     /// Data required to verify the QE Report Signature
     pub qe_certification_data: QECertificationData,
+}
+
+impl ECDSA256QuoteData {
+    pub fn header_signature_to_der(&self) -> Result<Vec<u8>> {
+        #[derive(Clone, Debug, Sequence)]
+        struct EcdsaSig<'a> {
+            r: UIntBytes<'a>,
+            s: UIntBytes<'a>,
+        }
+
+        //self.r.reverse();
+        //self.s.reverse();
+
+        let es = EcdsaSig {
+            r: UIntBytes::new(&self.isv_enclave_report_signature[0..32])?,
+            s: UIntBytes::new(&self.isv_enclave_report_signature[32..63])?,
+        };
+
+        Ok(es.to_vec()?)
+    }
+
+    pub fn qe_report_signature_to_der(&self) -> Result<Vec<u8>> {
+        #[derive(Clone, Debug, Sequence)]
+        struct EcdsaSig<'a> {
+            r: UIntBytes<'a>,
+            s: UIntBytes<'a>,
+        }
+
+        //self.r.reverse();
+        //self.s.reverse();
+
+        let es = EcdsaSig {
+            r: UIntBytes::new(&self.qe_report_signature[0..32])?,
+            s: UIntBytes::new(&self.qe_report_signature[32..63])?,
+        };
+
+        Ok(es.to_vec()?)
+    }
 }
 
 #[derive(Clone, Debug)]
