@@ -1,0 +1,26 @@
+[package]
+name = "steward_stress_test"
+version = "0.2.0"
+edition = "2021"
+license = "AGPL-3.0"
+
+[dependencies]
+# Internal dependencies
+attestation = { workspace = true }
+
+# External dependencies
+anyhow = { workspace = true }
+clap = { workspace = true, features = ["help", "usage", "error-context", "std", "derive", "env"] }
+const-oid = { workspace = true, features = ["db"] }
+ctrlc = { workspace = true }
+der = { workspace = true, features = ["std"] }
+http = { workspace = true }
+hyper = { workspace = true, features = ["http1", "server", "client", "tcp"] }
+sec1 = { workspace = true, features = ["std", "pkcs8"] }
+tokio = { workspace = true, features = ["rt", "macros"] }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true, features = ["env-filter", "json", "fmt"] }
+x509 = { workspace = true, features = ["std"] }
+
+[target.'cfg(not(target_os = "wasi"))'.dependencies]
+tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
