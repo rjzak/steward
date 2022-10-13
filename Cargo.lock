@@ -1377,6 +1377,7 @@ dependencies = [
  "sec1",
  "serde",
  "sgx",
+ "sha2",
  "testaso",
  "tokio",
  "toml 0.7.7",

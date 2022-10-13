@@ -20,6 +20,7 @@ hyper = { workspace = true, features = ["http1", "server"] }
 rustls-pemfile = { workspace = true }
 sec1 = { workspace = true, features = ["std", "pkcs8"] }
 serde = { workspace = true, features = ["derive", "std"] }
+sha2 = { workspace = true }
 tokio = { workspace = true, features = ["rt", "macros"] }
 toml = { workspace = true, features = ["parse"] }
 tower-http = { workspace = true, features = ["trace"] }

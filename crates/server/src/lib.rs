@@ -32,6 +32,7 @@ use der::{Decode, Encode, Sequence};
 use hyper::StatusCode;
 use sec1::pkcs8::PrivateKeyInfo;
 use serde::Deserialize;
+use sha2::{Digest, Sha256};
 use tower_http::trace::{
     DefaultOnBodyChunk, DefaultOnEos, DefaultOnFailure, DefaultOnRequest, DefaultOnResponse,
     TraceLayer,
@@ -378,6 +379,19 @@ pub async fn attest(
         _ => return Err(StatusCode::BAD_REQUEST),
     };
 
+    println!("Received CSR bytes:");
+    for d in body.as_ref() {
+        print!("{:02x}", d);
+    }
+    println!();
+
+    use std::io::prelude::*;
+    let fname = format!("csr_data-{:x}.bin", Sha256::digest(body.as_ref()));
+    std::fs::File::create(Path::new(&fname))
+        .unwrap()
+        .write_all(body.as_ref())
+        .unwrap();
+
     // Decode and verify the certification requests.
     reqs.into_iter()
         .map(|cr| {
@@ -408,7 +422,11 @@ pub async fn attest(
                 .collect::<Result<_, _>>()?;
 
             match ct.to_string().as_ref() {
-                PKCS10 => vec![issuer, issued[0].clone()].to_vec(),
+                PKCS10 => {
+                    let issued_vec = issued[0].to_vec().unwrap();
+                    std::fs::write(format!("csr_signed-{:x}.crt", Sha256::digest(&issued_vec)), issued_vec).unwrap();
+                    vec![issuer, issued[0].clone()].to_vec()
+                },
                 BUNDLE => Output {
                     chain: vec![issuer],
                     issued,
