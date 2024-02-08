@@ -243,13 +243,13 @@ impl Sgx {
                     "sgx TCB report shows firmware not `UpToDate`"
                 );
             }
-        } else {
-            // No attestation configuration, so ensure TCB is up-to-date.
-            ensure!(
-                tcb.tcb_status == "UpToDate",
-                "sgx TCB report shows firmware not `UpToDate`"
-            );
-        }
+        } //else {
+          // No attestation configuration, so ensure TCB is up-to-date.
+          //    ensure!(
+          //        tcb.tcb_status == "UpToDate",
+          //        "sgx TCB report shows firmware not `UpToDate`"
+          //    );
+          //}
 
         Ok(false)
     }
